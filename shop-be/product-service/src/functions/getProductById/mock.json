@@ -3,6 +3,7 @@
     "Content-Type": "application/json"
   },
   "pathParameters": {
-    "id": "/id"
-  }
+    "id": "00284a51-43ba-4606-9e0e-1b83aff358a4"
+  },
+  "body": null
 }
