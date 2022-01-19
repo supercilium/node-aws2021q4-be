@@ -8,7 +8,7 @@ import schema from './schema';
 
 const getProductById: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (event) => {
   const { pathParameters: { id } } = event;
-  const { rows: product } = await dbConnectAndExecute<Product>(`select id, title, description, price, count from products p left join stocks s on p.id = s.product_id where id = '${id}';`)
+  const { rows: product } = await dbConnectAndExecute<Product>({ query: 'select id, title, description, price, count from products p left join stocks s on p.id = s.product_id where id = $1;', params: [id] })
 
   if (!product) {
     return formatJSONResponse({
