@@ -29,6 +29,6 @@ const fillStocksTable = `
 
 export const main = async (_event) => {
     console.log('Database initialization started')
-    await dbConnectAndExecute([createProductsTable, createStocksTable, fillProductsTable, fillStocksTable])
+    await dbConnectAndExecute([{ query: createProductsTable }, { query: createStocksTable }, { query: fillProductsTable }, { query: fillStocksTable }])
     console.log('Database initialization finished')
 }

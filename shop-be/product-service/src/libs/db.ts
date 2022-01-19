@@ -1,5 +1,10 @@
 import { Client, ClientConfig } from 'pg';
 
+interface DbQuery {
+    query: string;
+    params?: unknown[]
+}
+
 const { POSTGRESQL_HOST, POSTGRESQL_PORT, DB_NAME, USERNAME, PASSWORD } = process.env;
 
 const dbOptions: ClientConfig = {
@@ -14,12 +19,12 @@ const dbOptions: ClientConfig = {
     connectionTimeoutMillis: 5000,
 }
 
-export const dbExecute = async <T>(db: Client, query: string | string[]) => {
+export const dbExecute = async <T>(db: Client, dbQuery: DbQuery | DbQuery[]) => {
     try {
-        if (Array.isArray(query)) {
-            query.map(async queryString => await db.query<T>(queryString))
+        if (Array.isArray(dbQuery)) {
+            dbQuery.map(async queryObj => await db.query<T>(queryObj.query, queryObj.params))
         } else {
-            return await db.query<T>(query)
+            return await db.query<T>(dbQuery.query, dbQuery.params)
         }
     } catch (error) {
         console.error('Error during database request executing:', error)
@@ -28,7 +33,7 @@ export const dbExecute = async <T>(db: Client, query: string | string[]) => {
     }
 };
 
-export const dbConnectAndExecute = async <T>(query: string | string[]) => {
+export const dbConnectAndExecute = async <T>(query: DbQuery | DbQuery[]) => {
     const client = new Client(dbOptions);
     await client.connect();
 

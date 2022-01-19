@@ -9,7 +9,7 @@ import schema from './schema';
 const getProductsQuery = 'select id, title, description, price, count from products p left join stocks s on p.id = s.product_id;'
 
 const getProducts: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (_event) => {
-  const { rows: products } = await dbConnectAndExecute<Product>(getProductsQuery)
+  const { rows: products } = await dbConnectAndExecute<Product>({ query: getProductsQuery })
 
   return formatJSONResponse({
     products,
