@@ -1,7 +1,9 @@
 import type { AWS } from '@serverless/typescript';
+import { config } from './config';
 
 import getProducts from '@functions/getProducts';
 import getProductById from '@functions/getProductById';
+import postProduct from '@functions/postProduct';
 
 const serverlessConfiguration: AWS = {
   service: 'product-service',
@@ -18,11 +20,12 @@ const serverlessConfiguration: AWS = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+      POSTGRESQL_CONNECTION_STRING: config.POSTGRESQL_CONNECTION_STRING,
     },
     lambdaHashingVersion: '20201221',
   },
   // import the function via paths
-  functions: { getProducts, getProductById },
+  functions: { getProducts, getProductById, postProduct },
   package: { individually: true },
   custom: {
     esbuild: {
@@ -34,6 +37,7 @@ const serverlessConfiguration: AWS = {
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,
+      external: ['pg-native']
     },
   },
 };
