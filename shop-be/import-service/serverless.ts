@@ -2,7 +2,8 @@ import type { AWS } from '@serverless/typescript';
 
 import importProductsFile from '@functions/importProductsFile';
 import importFileParser from '@functions/importFileParser';
-const BUCKET_NAME = 'marusel-bucket-aws';
+
+import { config } from './config';
 
 const serverlessConfiguration: AWS = {
   service: 'import-service',
@@ -18,7 +19,7 @@ const serverlessConfiguration: AWS = {
     },
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
-      BUCKET_NAME: 'marusel-bucket-aws',
+      BUCKET_NAME: config.BUCKET_NAME,
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
     },
     lambdaHashingVersion: '20201221',
@@ -26,12 +27,12 @@ const serverlessConfiguration: AWS = {
       {
         Effect: 'Allow',
         Action: ['s3:ListBucket'],
-        Resource: "arn:aws:s3:::marusel-bucket-aws"
+        Resource: `arn:aws:s3:::${config.BUCKET_NAME}`
       },
       {
         Effect: 'Allow',
-        Action: ['s3:*'],
-        Resource: "arn:aws:s3:::marusel-bucket-aws/*"
+        Action: ['s3:GetObject', 's3:PutObject'],
+        Resource: `arn:aws:s3:::${config.BUCKET_NAME}/*`
       },
     ]
   },
@@ -43,7 +44,7 @@ const serverlessConfiguration: AWS = {
       productsImportBucket: {
         Type: 'AWS::S3::Bucket',
         Properties: {
-          BucketName: BUCKET_NAME,
+          BucketName: config.BUCKET_NAME,
           AccessControl: 'PublicRead',
           CorsConfiguration: {
             CorsRules: [{
@@ -57,13 +58,13 @@ const serverlessConfiguration: AWS = {
       productsImportBucketPolicy: {
         Type: 'AWS::S3::BucketPolicy',
         Properties: {
-          Bucket: BUCKET_NAME,
+          Bucket: config.BUCKET_NAME,
           PolicyDocument: {
             Statement: {
               Effect: 'Allow',
               Principal: '*',
               Action: "s3:*",
-              Resource: 'arn:aws:s3:::marusel-bucket-aws/*'
+              Resource: `arn:aws:s3:::${config.BUCKET_NAME}/*`
             }
           }
         }
@@ -71,7 +72,7 @@ const serverlessConfiguration: AWS = {
     }
   },
   custom: {
-    s3BucketName: BUCKET_NAME,
+    s3BucketName: config.BUCKET_NAME,
     esbuild: {
       bundle: true,
       minify: false,

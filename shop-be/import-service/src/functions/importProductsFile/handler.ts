@@ -1,37 +1,27 @@
 import type { ValidatedEventAPIGatewayProxyEvent } from '@libs/apiGateway';
 import { middyfy } from '@libs/lambda';
-import { PutObjectCommand, PutObjectCommandInput, S3 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { PREFIX, REGION } from '@libs/constants';
+import { HTTP_CODES, HTTP_CODES_TYPE } from '../../../../constants';
+import { bucketServices } from 'src/services/bucket';
 
 const importProductsFile: ValidatedEventAPIGatewayProxyEvent = async (event) => {
   const { queryStringParameters: { name } } = event;
 
   if (!name) {
     return {
-      statusCode: 400,
+      statusCode: HTTP_CODES.BUSINESS_ERROR,
       headers: { 'Access-Control-Allow-Origin': '*' },
       body: "No file name provided"
     }
   }
 
-  const s3 = new S3({ region: REGION });
-  let status = 200;
+  let status: HTTP_CODES_TYPE = HTTP_CODES.SUCCESS;
   let signedUrl = '';
 
-  const commandParams: PutObjectCommandInput = {
-    Bucket: process.env.BUCKET_NAME,
-    Key: `${PREFIX}/${name}`,
-    ContentType: 'text/csv'
-  }
-
-  const command = new PutObjectCommand(commandParams);
-
   try {
-    signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+    signedUrl = await bucketServices.getSignedUrl(name);
   } catch (error) {
     console.log(error);
-    status = 500;
+    status = HTTP_CODES.ERROR;
   }
   return {
     statusCode: status,

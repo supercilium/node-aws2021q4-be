@@ -1,7 +1,7 @@
 import type { ValidatedEventAPIGatewayProxyEvent } from '@libs/apiGateway';
 import { formatJSONResponse } from '@libs/apiGateway';
 import { middyfy } from '@libs/lambda';
-import { HTTP_CODES } from 'src/constants';
+import { HTTP_CODES } from '../../../../constants';
 import { productServices } from 'src/services/database';
 
 import schema from './schema';
