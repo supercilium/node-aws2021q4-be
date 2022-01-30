@@ -1,19 +1,19 @@
 import type { ValidatedEventAPIGatewayProxyEvent } from '@libs/apiGateway';
 import { formatJSONResponse } from '@libs/apiGateway';
-import { dbConnectAndExecute } from '@libs/db';
 import { middyfy } from '@libs/lambda';
-import { Product } from 'src/types/product';
+import { HTTP_CODES } from 'src/constants';
+import { productServices } from 'src/services/database';
 
 import schema from './schema';
 
 const getProductById: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (event) => {
   const { pathParameters: { id } } = event;
-  const { rows: product } = await dbConnectAndExecute<Product>({ query: 'select id, title, description, price, count from products p left join stocks s on p.id = s.product_id where id = $1;', params: [id] })
+  const { rows: product } = await productServices.findOne(id);
 
   if (!product) {
     return formatJSONResponse({
       body: 'Not found',
-    }, 404)
+    }, HTTP_CODES.NOT_FOUND)
   }
   return formatJSONResponse({ ...product[0] });
 }

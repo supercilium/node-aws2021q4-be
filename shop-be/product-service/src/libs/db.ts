@@ -1,18 +1,14 @@
 import { Client, ClientConfig } from 'pg';
-
+import { config } from '../../config';
 interface DbQuery {
     query: string;
     params?: unknown[]
 }
 
-const { POSTGRESQL_HOST, POSTGRESQL_PORT, DB_NAME, USERNAME, PASSWORD } = process.env;
+const { POSTGRESQL_CONNECTION_STRING } = config;
 
 const dbOptions: ClientConfig = {
-    host: POSTGRESQL_HOST,
-    port: +POSTGRESQL_PORT,
-    database: DB_NAME,
-    user: USERNAME,
-    password: PASSWORD,
+    connectionString: POSTGRESQL_CONNECTION_STRING,
     ssl: {
         rejectUnauthorized: false,
     },
