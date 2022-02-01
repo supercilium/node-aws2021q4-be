@@ -22,7 +22,7 @@ export const bucketServices = {
         const s3 = new S3({ region: REGION });
 
         const { s3: { object: { key } } } = element;
-        const params: GetObjectCommandInput = { Bucket: BUCKET_NAME, Key: key }
+        const params: GetObjectCommandInput = { Bucket: BUCKET_NAME, Key: key.replace(/\+/g, ' ') }
 
         return await s3.getObject(params)
     },

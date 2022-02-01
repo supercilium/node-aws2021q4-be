@@ -2,13 +2,14 @@ import type { AWS } from '@serverless/typescript';
 
 import importProductsFile from '@functions/importProductsFile';
 import importFileParser from '@functions/importFileParser';
+import catalogBatchProcess from '@functions/catalogBatchProcess';
 
 import { config } from './config';
 
 const serverlessConfiguration: AWS = {
   service: 'import-service',
   frameworkVersion: '2',
-  plugins: ['serverless-esbuild'],
+  plugins: ['serverless-s3-local', 'serverless-offline', 'serverless-esbuild'],
   provider: {
     name: 'aws',
     runtime: 'nodejs14.x',
@@ -21,6 +22,9 @@ const serverlessConfiguration: AWS = {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       BUCKET_NAME: config.BUCKET_NAME,
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+      SQS_URL: {
+        Ref: 'catalogItemsQueue'
+      }
     },
     lambdaHashingVersion: '20201221',
     iamRoleStatements: [
@@ -34,10 +38,15 @@ const serverlessConfiguration: AWS = {
         Action: ['s3:GetObject', 's3:PutObject'],
         Resource: `arn:aws:s3:::${config.BUCKET_NAME}/*`
       },
+      {
+        Effect: 'Allow',
+        Action: ['sqs:*'],
+        Resource: [{ 'Fn::GetAtt': ['catalogItemsQueue', 'Arn'] }]
+      }
     ]
   },
   // import the function via paths
-  functions: { importProductsFile, importFileParser },
+  functions: { importProductsFile, importFileParser, catalogBatchProcess },
   package: { individually: true },
   resources: {
     Resources: {
@@ -68,6 +77,12 @@ const serverlessConfiguration: AWS = {
             }
           }
         }
+      },
+      catalogItemsQueue: {
+        Type: 'AWS::SQS::Queue',
+        Properties: {
+          QueueName: config.SQS_NAME
+        }
       }
     }
   },
@@ -82,7 +97,12 @@ const serverlessConfiguration: AWS = {
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,
+      external: ['pg-native']
     },
+    s3: {
+      port: 8000,
+      directory: "./s3-local"
+    }
   },
   outputs: {
     productsImportBucket: 'productsImportBucket'
