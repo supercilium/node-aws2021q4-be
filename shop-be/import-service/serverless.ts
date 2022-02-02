@@ -9,7 +9,7 @@ import { config } from './config';
 const serverlessConfiguration: AWS = {
   service: 'import-service',
   frameworkVersion: '2',
-  plugins: ['serverless-s3-local', 'serverless-offline', 'serverless-esbuild'],
+  plugins: ['serverless-esbuild', 'serverless-s3-local', 'serverless-offline'],
   provider: {
     name: 'aws',
     runtime: 'nodejs14.x',

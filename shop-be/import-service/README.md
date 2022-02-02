@@ -93,3 +93,9 @@ The project code base is mainly located within the `src` folder. This folder is 
 ### Advanced usage
 
 Any tsconfig.json can be used, but if you do, set the environment variable `TS_NODE_CONFIG` for building the application, eg `TS_NODE_CONFIG=./tsconfig.app.json npx serverless webpack`
+
+To trigger s3 put event with serverless-offline:
+`npm start`
+
+in another terminal:
+`AWS_ACCESS_KEY_ID=S3RVER AWS_SECRET_ACCESS_KEY=S3RVER aws --endpoint http://127.0.0.1:8000 s3 cp ./sample.csv s3://marusel-bucket-aws/uploaded/sample.csv`
