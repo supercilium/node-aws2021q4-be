@@ -3,23 +3,19 @@ import { S3Handler } from 'aws-lambda';
 import { bucketServices } from 'src/services/bucket';
 import { stream } from 'src/services/stream';
 
-import { pipeline } from 'stream';
-import { HTTP_CODES, HTTP_CODES_TYPE } from '../../../../constants';
+import { PassThrough, pipeline } from 'stream';
 const csv = require('csv-parser')
 
 const importProductsFile: S3Handler = async (event) => {
-  console.log(event.Records[0].s3)
   const { Records } = event;
-  let status: HTTP_CODES_TYPE = HTTP_CODES.SUCCESS;
   try {
     await Promise.all(Records.map(async element => {
       const object = await bucketServices.getObject(element);
-      console.log(object)
       pipeline(
         object.Body,
-        csv(),
-        // stream.outputToDB(),
-        // stream.outputToQueue(),
+        new PassThrough({ encoding: 'utf8', objectMode: false }),
+        csv({ mapHeaders: ({ header }) => header.toLowerCase() }),
+        stream.outputToQueue(),
 
         (err) => {
           if (err) {
@@ -33,7 +29,6 @@ const importProductsFile: S3Handler = async (event) => {
     }));
   } catch (error) {
     console.log(error);
-    status = HTTP_CODES.ERROR;
   }
 }
 

@@ -6,6 +6,8 @@ import { sqsServices } from "./sqs"
 export const stream = {
     outputToQueue: () => {
         return new Transform({
+            encoding: 'utf8',
+            objectMode: true,
             transform: (chunk, _encoding, callback) => {
                 try {
                     sqsServices.send(chunk);
@@ -19,15 +21,19 @@ export const stream = {
     },
     outputToDB: () => {
         return new Transform({
+            encoding: 'utf8',
+            objectMode: true,
             transform: (chunk, _encoding, callback) => {
                 try {
                     const data: Omit<Product, 'id'> = {
-                        count: chunk?.count,
+                        count: parseInt(chunk?.count),
                         title: chunk?.title,
                         description: chunk?.description,
-                        price: chunk?.price,
+                        price: parseFloat(chunk?.price),
                     };
-                    productServices.update(data);
+                    console.log(data)
+
+                    productServices.insert(data);
                     callback();
                 } catch (err) {
                     console.error(err);
