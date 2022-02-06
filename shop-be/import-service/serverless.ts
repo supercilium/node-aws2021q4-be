@@ -2,13 +2,14 @@ import type { AWS } from '@serverless/typescript';
 
 import importProductsFile from '@functions/importProductsFile';
 import importFileParser from '@functions/importFileParser';
+import catalogBatchProcess from '@functions/catalogBatchProcess';
 
 import { config } from './config';
 
 const serverlessConfiguration: AWS = {
   service: 'import-service',
   frameworkVersion: '2',
-  plugins: ['serverless-esbuild'],
+  plugins: ['serverless-esbuild', 'serverless-s3-local', 'serverless-offline'],
   provider: {
     name: 'aws',
     runtime: 'nodejs14.x',
@@ -19,8 +20,15 @@ const serverlessConfiguration: AWS = {
     },
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+      POSTGRESQL_CONNECTION_STRING: config.POSTGRESQL_CONNECTION_STRING,
       BUCKET_NAME: config.BUCKET_NAME,
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+      SQS_URL: {
+        Ref: 'catalogItemsQueue'
+      },
+      SNS_ARN: {
+        Ref: 'productsImportSNSPublic'
+      }
     },
     lambdaHashingVersion: '20201221',
     iamRoleStatements: [
@@ -34,10 +42,20 @@ const serverlessConfiguration: AWS = {
         Action: ['s3:GetObject', 's3:PutObject'],
         Resource: `arn:aws:s3:::${config.BUCKET_NAME}/*`
       },
+      {
+        Effect: 'Allow',
+        Action: ['sqs:*'],
+        Resource: [{ 'Fn::GetAtt': ['catalogItemsQueue', 'Arn'] }]
+      },
+      {
+        Effect: 'Allow',
+        Action: ['sns:Publish'],
+        Resource: 'arn:aws:sns:eu-west-1:104990440280:import-products-topic'
+      }
     ]
   },
   // import the function via paths
-  functions: { importProductsFile, importFileParser },
+  functions: { importProductsFile, importFileParser, catalogBatchProcess },
   package: { individually: true },
   resources: {
     Resources: {
@@ -68,6 +86,28 @@ const serverlessConfiguration: AWS = {
             }
           }
         }
+      },
+      productsImportSNSPublic: {
+        Type: 'AWS::SNS::Topic',
+        Properties: {
+          TopicName: config.SNS_NAME
+        }
+      },
+      productsImportSubscription: {
+        Type: 'AWS::SNS::Subscription',
+        Properties: {
+          Endpoint: 'marusel.12@gmail.com',
+          Protocol: 'email',
+          TopicArn: {
+            Ref: 'productsImportSNSPublic'
+          }
+        }
+      },
+      catalogItemsQueue: {
+        Type: 'AWS::SQS::Queue',
+        Properties: {
+          QueueName: config.SQS_NAME
+        }
       }
     }
   },
@@ -82,7 +122,12 @@ const serverlessConfiguration: AWS = {
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,
+      external: ['pg-native']
     },
+    s3: {
+      port: 8000,
+      directory: "./s3-local"
+    }
   },
   outputs: {
     productsImportBucket: 'productsImportBucket'

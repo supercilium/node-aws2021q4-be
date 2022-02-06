@@ -1,19 +1,17 @@
 import { handlerPath } from '@libs/handlerResolver';
 import { config } from '../../../config';
 
-const { PREFIX, BUCKET_NAME } = config;
+const { BATCH_SIZE } = config;
 
 export default {
   handler: `${handlerPath(__dirname)}/handler.main`,
   events: [
     {
-      s3: {
-        bucket: BUCKET_NAME,
-        event: 's3:ObjectCreated:Put',
-        rules: [{
-          prefix: PREFIX
-        }],
-        existing: true
+      sqs: {
+        batchSize: BATCH_SIZE,
+        arn: {
+          'Fn::GetAtt': ['catalogItemsQueue', 'Arn']
+        },
       }
     }
   ]
