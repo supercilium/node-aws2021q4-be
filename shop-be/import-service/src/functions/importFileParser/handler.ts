@@ -19,7 +19,7 @@ const importProductsFile: S3Handler = async (event) => {
           object.Body,
           new PassThrough({ encoding: 'utf8', objectMode: false }),
           csv({ mapHeaders: ({ header }) => header.toLowerCase() }),
-          await stream.outputToQueue(),
+          stream.outputToQueue(),
         )
         console.log('Completed')
       } catch (err) {

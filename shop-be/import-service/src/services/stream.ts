@@ -8,7 +8,7 @@ import { config } from '../../config'
 const { REGION } = config;
 
 export const stream = {
-    outputToQueue: async () => {
+    outputToQueue: () => {
         const client = new SQSClient({ region: REGION });
 
         return new Transform({
