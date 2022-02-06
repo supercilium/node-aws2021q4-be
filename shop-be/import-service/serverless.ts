@@ -20,10 +20,14 @@ const serverlessConfiguration: AWS = {
     },
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+      POSTGRESQL_CONNECTION_STRING: config.POSTGRESQL_CONNECTION_STRING,
       BUCKET_NAME: config.BUCKET_NAME,
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
       SQS_URL: {
         Ref: 'catalogItemsQueue'
+      },
+      SNS_ARN: {
+        Ref: 'productsImportSNSPublic'
       }
     },
     lambdaHashingVersion: '20201221',
@@ -42,6 +46,11 @@ const serverlessConfiguration: AWS = {
         Effect: 'Allow',
         Action: ['sqs:*'],
         Resource: [{ 'Fn::GetAtt': ['catalogItemsQueue', 'Arn'] }]
+      },
+      {
+        Effect: 'Allow',
+        Action: ['sns:Publish'],
+        Resource: 'arn:aws:sns:eu-west-1:104990440280:import-products-topic'
       }
     ]
   },
@@ -75,6 +84,22 @@ const serverlessConfiguration: AWS = {
               Action: "s3:*",
               Resource: `arn:aws:s3:::${config.BUCKET_NAME}/*`
             }
+          }
+        }
+      },
+      productsImportSNSPublic: {
+        Type: 'AWS::SNS::Topic',
+        Properties: {
+          TopicName: config.SNS_NAME
+        }
+      },
+      productsImportSubscription: {
+        Type: 'AWS::SNS::Subscription',
+        Properties: {
+          Endpoint: 'marusel.12@gmail.com',
+          Protocol: 'email',
+          TopicArn: {
+            Ref: 'productsImportSNSPublic'
           }
         }
       },

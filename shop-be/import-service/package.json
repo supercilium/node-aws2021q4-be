@@ -4,7 +4,7 @@
   "description": "Serverless aws-nodejs-typescript template",
   "main": "serverless.ts",
   "scripts": {
-    "start": "serverless offline start",
+    "start": "SLS_DEBUG=* serverless offline start",
     "invoke:local:importFileParser": "npx sls invoke local -f importFileParser --path src/functions/importFileParser/mock.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +12,7 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
+    "@aws-sdk/client-sns": "^3.49.0",
     "@aws-sdk/client-sqs": "^3.49.0",
     "@middy/core": "^2.5.3",
     "@middy/http-json-body-parser": "^2.5.3",

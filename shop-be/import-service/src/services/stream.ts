@@ -2,15 +2,21 @@ import { Product } from "src/types/product"
 import { Transform } from "stream"
 import { productServices } from "./db"
 import { sqsServices } from "./sqs"
+import { SQSClient } from "@aws-sdk/client-sqs";
+import { config } from '../../config'
+
+const { REGION } = config;
 
 export const stream = {
-    outputToQueue: () => {
+    outputToQueue: async () => {
+        const client = new SQSClient({ region: REGION });
+
         return new Transform({
             encoding: 'utf8',
             objectMode: true,
-            transform: (chunk, _encoding, callback) => {
+            transform: async (chunk, _encoding, callback) => {
                 try {
-                    sqsServices.send(chunk);
+                    await sqsServices.send(JSON.stringify(chunk), client);
                     callback();
                 } catch (err) {
                     console.error(err);
@@ -23,7 +29,7 @@ export const stream = {
         return new Transform({
             encoding: 'utf8',
             objectMode: true,
-            transform: (chunk, _encoding, callback) => {
+            transform: async (chunk, _encoding, callback) => {
                 try {
                     const data: Omit<Product, 'id'> = {
                         count: parseInt(chunk?.count),
@@ -33,7 +39,7 @@ export const stream = {
                     };
                     console.log(data)
 
-                    productServices.insert(data);
+                    await productServices.insert(data);
                     callback();
                 } catch (err) {
                     console.error(err);
