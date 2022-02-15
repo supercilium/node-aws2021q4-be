@@ -6,7 +6,12 @@ export default {
     {
       http: {
         method: 'get',
-        path: 'import'
+        path: 'import',
+        cors: true,
+        authorizer: {
+          arn: 'arn:aws:lambda:eu-west-1:104990440280:function:authorization-service-dev-basicAuthorizer',
+          identitySource: 'method.request.header.Authorization',
+        }
       }
     }
   ]
